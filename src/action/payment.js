@@ -259,7 +259,7 @@ class PaymentAction {
         msg: 'Sending transaction timed out!',
       });
     }, PAYMENT_TIMEOUT);
-    this._nav.goWait();
+    this.initWaitScreen({ copy: 'Sending payment...' });
     try {
       await this._sendPayment();
       this._nav.goPayBitcoinDone();
@@ -295,7 +295,7 @@ class PaymentAction {
       this._nav.goPaymentFailed();
     }, PAYMENT_TIMEOUT);
     try {
-      this._nav.goWait();
+      this.initWaitScreen({ copy: 'Sending payment...' });
       const invoice = this._store.payment.address;
       const stream = this._grpc.sendStreamCommand('sendPayment');
       await new Promise((resolve, reject) => {
@@ -318,6 +318,17 @@ class PaymentAction {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  /**
+   * Initialize the Wait screen with copy appropriate for what the user is
+   * waiting on.
+   * @param {string} copy Copy to display.
+   * @return {undefined}
+   */
+  initWaitScreen({ copy = 'Loading network...' }) {
+    this._store.waitScreenCopy = copy;
+    this._nav.goWait();
   }
 }
 

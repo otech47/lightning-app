@@ -5,6 +5,7 @@ import WalletAction from '../../../src/action/wallet';
 import NavAction from '../../../src/action/nav';
 import NavActionMobile from '../../../src/action/nav-mobile';
 import NotificationAction from '../../../src/action/notification';
+import PaymentAction from '../../../src/action/payment';
 import * as logger from '../../../src/action/log';
 import nock from 'nock';
 import 'isomorphic-fetch';
@@ -18,6 +19,7 @@ describe('Action Wallet Unit Tests', () => {
   let wallet;
   let nav;
   let notification;
+  let payment;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox({});
@@ -30,7 +32,8 @@ describe('Action Wallet Unit Tests', () => {
     db = sinon.createStubInstance(AppStorage);
     notification = sinon.createStubInstance(NotificationAction);
     nav = sinon.createStubInstance(NavAction);
-    wallet = new WalletAction(store, grpc, db, nav, notification);
+    payment = sinon.createStubInstance(PaymentAction);
+    wallet = new WalletAction(store, grpc, db, nav, notification, payment);
   });
 
   afterEach(() => {
@@ -325,7 +328,7 @@ describe('Action Wallet Unit Tests', () => {
 
     it('should navigate to seed intro on mobile', () => {
       nav = sinon.createStubInstance(NavActionMobile);
-      wallet = new WalletAction(store, grpc, db, nav, notification);
+      wallet = new WalletAction(store, grpc, db, nav, notification, payment);
       wallet.initSeed();
       expect(nav.goSeedIntro, 'was called once');
     });
@@ -437,7 +440,7 @@ describe('Action Wallet Unit Tests', () => {
       store.walletAddress = 'non-null-addr';
       wallet.initInitialDeposit();
       expect(nav.goNewAddress, 'was called once');
-      expect(nav.goWait, 'was not called');
+      expect(payment.initWaitScreen, 'was not called');
     });
 
     it('should stay on wait screen until address is non-null', async () => {
@@ -445,7 +448,7 @@ describe('Action Wallet Unit Tests', () => {
       wallet.initInitialDeposit();
       expect(nav.goNewAddress, 'was not called');
       store.walletAddress = 'non-null-addr';
-      expect(nav.goWait, 'was called once');
+      expect(payment.initWaitScreen, 'was called once');
       expect(nav.goNewAddress, 'was called once');
     });
   });
@@ -510,7 +513,7 @@ describe('Action Wallet Unit Tests', () => {
       expect(grpc.sendUnlockerCommand, 'was called with', 'UnlockWallet', {
         walletPassword: Buffer.from('baz', 'utf8'),
       });
-      expect(nav.goWait, 'was called once');
+      expect(payment.initWaitScreen, 'was called once');
       expect(nav.goHome, 'was not called');
       store.lndReady = true;
       store.walletAddress = 'some-address';
@@ -525,7 +528,7 @@ describe('Action Wallet Unit Tests', () => {
         .rejects(new Error('Boom!'));
       await wallet.unlockWallet({ walletPassword: 'baz' });
       expect(notification.display, 'was called once');
-      expect(nav.goWait, 'was called once');
+      expect(payment.initWaitScreen, 'was called once');
       expect(store.walletUnlocked, 'to be', false);
       expect(store.wallet.password, 'to be', '');
       expect(nav.goPassword, 'was called once');

@@ -14,12 +14,13 @@ import { when } from 'mobx';
 import * as log from './log';
 
 class WalletAction {
-  constructor(store, grpc, db, nav, notification) {
+  constructor(store, grpc, db, nav, notification, payment) {
     this._store = store;
     this._grpc = grpc;
     this._db = db;
     this._nav = nav;
     this._notification = notification;
+    this._payment = payment;
   }
 
   //
@@ -245,7 +246,7 @@ class WalletAction {
       this.initResetPassword();
       return this._notification.display({ msg: errorMsg });
     }
-    this._nav.goWait();
+    this._payment.initWaitScreen({ copy: 'Updating password...' });
     await this.resetPassword({
       currentPassword: password,
       newPassword: newPassword,
@@ -394,7 +395,7 @@ class WalletAction {
    */
   async unlockWallet({ walletPassword }) {
     try {
-      this._nav.goWait();
+      this._payment.initWaitScreen({});
       await this._grpc.sendUnlockerCommand('UnlockWallet', {
         walletPassword: toBuffer(walletPassword),
         recoveryWindow: this._store.settings.restoring ? 250 : 0,
@@ -463,7 +464,7 @@ class WalletAction {
     if (this._store.walletAddress) {
       this._nav.goNewAddress();
     } else {
-      this._nav.goWait();
+      this._payment.initWaitScreen({});
       when(() => this._store.walletAddress, () => this._nav.goNewAddress());
     }
   }

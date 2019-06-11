@@ -92,7 +92,13 @@ const ipc = sinon.createStubInstance(IpcAction);
 const grpc = sinon.createStubInstance(GrpcAction);
 const info = sinon.createStubInstance(InfoAction);
 const notify = sinon.createStubInstance(NotificationAction);
-const wallet = new WalletAction(store, grpc, db, nav, notify);
+const payment = new PaymentAction(store, grpc, nav, notify);
+sinon.stub(payment, 'checkType');
+sinon.stub(payment, 'payBitcoin');
+sinon.stub(payment, 'toggleMax');
+sinon.stub(payment, 'payLightning');
+sinon.stub(payment, 'initPayBitcoinConfirm');
+const wallet = new WalletAction(store, grpc, db, nav, notify, payment);
 const setting = new SettingAction(store, wallet, db, ipc);
 const autopilot = sinon.createStubInstance(AtplAction);
 sinon.stub(wallet, 'update');
@@ -104,12 +110,6 @@ const transaction = new TransactionAction(store, grpc, nav, notify);
 sinon.stub(transaction, 'update');
 const invoice = new InvoiceAction(store, grpc, nav, notify, Clipboard);
 sinon.stub(invoice, 'generateUri');
-const payment = new PaymentAction(store, grpc, nav, notify);
-sinon.stub(payment, 'checkType');
-sinon.stub(payment, 'payBitcoin');
-sinon.stub(payment, 'toggleMax');
-sinon.stub(payment, 'payLightning');
-sinon.stub(payment, 'initPayBitcoinConfirm');
 const channel = new ChannelAction(store, grpc, nav, notify);
 sinon.stub(channel, 'update');
 sinon.stub(channel, 'connectAndOpen');
@@ -178,8 +178,8 @@ storiesOf('Screens', module)
   .add('Loader - Syncing Chain (Mobile)', () => (
     <LoaderSyncingMobile store={store} />
   ))
-  .add('Wait', () => <Wait />)
-  .add('Wait (Mobile)', () => <WaitMobile />)
+  .add('Wait', () => <Wait store={store} />)
+  .add('Wait (Mobile)', () => <WaitMobile store={store} />)
   .add('Home', () => (
     <Home
       store={store}

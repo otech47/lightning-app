@@ -95,7 +95,7 @@ const Password = () => <PinView store={store} auth={auth} />;
 
 const LoaderSyncing = () => <LoaderSyncingView store={store} />;
 
-const Wait = () => <WaitView />;
+const Wait = () => <WaitView store={store} />;
 
 const Home = () => (
   <HomeView

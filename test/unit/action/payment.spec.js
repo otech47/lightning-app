@@ -453,4 +453,18 @@ describe('Action Payments Unit Tests', () => {
       expect(nav.goPayLightningDone, 'was not called');
     });
   });
+
+  describe('initWaitScreen', () => {
+    it('should set the wait screen copy and go to wait page', () => {
+      const testCopy = 'foobar';
+      payment.initWaitScreen({ copy: testCopy });
+      expect(store.waitScreenCopy, 'to be', testCopy);
+    });
+
+    it('should set default copy if not specified', () => {
+      const defaultCopy = 'Loading network...';
+      payment.initWaitScreen({});
+      expect(store.waitScreenCopy, 'to be', defaultCopy);
+    });
+  });
 });
