@@ -53,7 +53,7 @@ describe('Action Info Unit Tests', () => {
       await info.getInfo();
       expect(notification.display, 'was called once');
       expect(notification.display, 'was called with', {
-        msg: 'Syncing to chain (block: 1234)',
+        msg: 'Syncing to chain',
         wait: true,
       });
     });
