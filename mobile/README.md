@@ -1,6 +1,41 @@
-This project was bootstrapped with [Create React Native App](https://github.com/react-community/create-react-native-app).
+## Getting Started
 
-Below you'll find information about performing common tasks. The most recent version of this guide is available [here](https://github.com/react-community/create-react-native-app/blob/master/react-native-scripts/template/README.md).
+Be sure you are in the `/mobile` folder in your terminal and run `npm install` to install dependencies. If you haven't already installed the Expo CLI tools run `npm install -g expo-cli` first, then run `npm start` and let Expo set up the development environment.
+
+Expo provides thorough guidance on how to navigate the development environment whether you want to build to a mobile device or to a simulator. If you have problems getting the app to build, skip to the the Known Issues section and continue reading.
+
+After the app build successfully, it may hang on a Splash page. This is because the state has been stubbed to simulate a mocked network environment. Without needing to be connected to mainnet/testnet, you can test changes to the app in development by commenting out certain components from the navigation stack.
+
+Find the function call in `/src/view/main-mobile.js` that creates the MainStack.
+
+```
+const MainStack = createStackNavigator(
+```
+
+Comment out 'Welcome', 'Wait', and 'Loader' and the app should reload and advance to the Seed Selection. Commenting out all but the 'Home' element should advance the app to the Home Page with a mocked wallet set up. You can also edit the `/src/action/index-mobile.js` file to change stubbed state value as needed.
+
+
+### Known Issues
+
+1.
+
+Error: `Unable to resolve "../../assets/rpc" from "../src/action/grpc-mobile.js"`
+
+You may need to run `npm install` in the root directory and move back into the `/mobile` directory to continue
+
+2.
+
+Error: `Can't find variable: Intl`
+
+To resolve this, [open the developer menu](https://facebook.github.io/react-native/docs/debugging#accessing-the-in-app-developer-menu) in the app and click Debug JS Remotely. Reload the app and the error should no longer appear.
+
+-------
+
+If you run into further issues, continue reading the `create-react-native-app` docs below to find information about common tasks.
+
+The most recent version of this guide is available [here](https://github.com/react-community/create-react-native-app/blob/master/react-native-scripts/template/README.md).
+
+This project was bootstrapped with [Create React Native App](https://github.com/react-community/create-react-native-app).
 
 ## Table of Contents
 

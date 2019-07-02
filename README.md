@@ -106,3 +106,7 @@ Lnd data and logs are written to the following locations in production:
 * **Linux:** `~/.config/lightning-app/lnd`
 * **OSX:** `~/Library/Application Support/lightning-app/lnd`
 * **Windows:** `%USERPROFILE%\AppData\Roaming\lightning-app\lnd`
+
+### React Native Mobile App
+
+See the [README](https://github.com/lightninglabs/lightning-app/blob/master/mobile/README.md) in the `/mobile` directory for instructions on developing the mobile app with React Native & Expo.
