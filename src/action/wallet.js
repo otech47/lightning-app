@@ -14,12 +14,13 @@ import { when } from 'mobx';
 import * as log from './log';
 
 class WalletAction {
-  constructor(store, grpc, db, nav, notification) {
+  constructor(store, grpc, db, nav, notification, file) {
     this._store = store;
     this._grpc = grpc;
     this._db = db;
     this._nav = nav;
     this._notification = notification;
+    this._file = file;
   }
 
   //
@@ -43,7 +44,7 @@ class WalletAction {
    * @param {number} options.index The seed index
    */
   setSeedVerify({ word = '', index }) {
-    this._store.wallet.seedVerify[index] = word.toLowerCase();
+    this._store.wallet.seedVerify[index] = word.toLowerCase().trim();
   }
 
   /**
@@ -53,7 +54,7 @@ class WalletAction {
    * @param {number} options.index The seed index
    */
   setRestoreSeed({ word, index }) {
-    this._store.seedMnemonic[index] = word.trim();
+    this._store.restoreSeedMnemonic[index] = word.trim();
   }
 
   /**
@@ -221,7 +222,9 @@ class WalletAction {
     await this.initWallet({
       walletPassword: newPassword,
       recoveryWindow: this._store.settings.restoring ? RECOVERY_WINDOW : 0,
-      seedMnemonic: this._store.seedMnemonic.toJSON(),
+      seedMnemonic: this._store.settings.restoring
+        ? this._store.restoreSeedMnemonic.toJSON()
+        : this._store.seedMnemonic.toJSON(),
     });
   }
 
@@ -263,6 +266,7 @@ class WalletAction {
    */
   async initWallet({ walletPassword, seedMnemonic, recoveryWindow = 0 }) {
     try {
+      await this.deleteDB();
       await this._grpc.sendUnlockerCommand('InitWallet', {
         walletPassword: toBuffer(walletPassword),
         cipherSeedMnemonic: seedMnemonic,
@@ -271,11 +275,37 @@ class WalletAction {
       this._store.walletUnlocked = true;
       this._nav.goSeedSuccess();
     } catch (err) {
-      this._notification.display({
-        type: 'error',
-        msg: `Initializing wallet failed: ${err.details}`,
-      });
+      if (this._store.settings.restoring) {
+        this._notification.display({
+          type: 'error',
+          msg: `Initializing wallet failed. Invalid seed.`,
+        });
+        this.initRestoreWallet();
+      } else {
+        this._notification.display({
+          type: 'error',
+          msg: `Initializing wallet failed.`,
+        });
+      }
     }
+  }
+
+  /**
+   * Delete the wallet.db file. This allows the user to restore their wallet
+   * (including channel state) from the seed if they've they've forgotten the
+   * wallet pin/password. We need to delete both mainnet and testnet wallet
+   * files since we haven't set `store.network` at this point in the app life
+   * cycle yet (which happens later when we query getInfo).
+   * @return {Promise<undefined>}
+   */
+  async deleteDB() {
+    if (!this._file) {
+      return;
+    }
+    await Promise.all([
+      this._file.deleteWalletDB('testnet'),
+      this._file.deleteWalletDB('mainnet'),
+    ]);
   }
 
   /**
@@ -320,7 +350,7 @@ class WalletAction {
    * @return {undefined}
    */
   initRestoreWallet() {
-    this._store.seedMnemonic = Array(24).fill('');
+    this._store.restoreSeedMnemonic = Array(24).fill('');
     this._store.wallet.restoreIndex = 0;
     this._nav.goRestoreSeed();
   }
@@ -350,7 +380,7 @@ class WalletAction {
       this._store.wallet.restoreIndex -= 3;
       this._store.wallet.focusedRestoreInd = this._store.wallet.restoreIndex;
     } else {
-      this._nav.goSelectSeed();
+      this._nav.goBack ? this._nav.goBack() : this._nav.goSelectSeed();
     }
   }
 

@@ -4,6 +4,7 @@ import AppStorage from '../../../src/action/app-storage';
 import WalletAction from '../../../src/action/wallet';
 import NavAction from '../../../src/action/nav';
 import NavActionMobile from '../../../src/action/nav-mobile';
+import FileAction from '../../../src/action/file-mobile';
 import NotificationAction from '../../../src/action/notification';
 import * as logger from '../../../src/action/log';
 import nock from 'nock';
@@ -18,6 +19,7 @@ describe('Action Wallet Unit Tests', () => {
   let wallet;
   let nav;
   let notification;
+  let file;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox({});
@@ -30,7 +32,8 @@ describe('Action Wallet Unit Tests', () => {
     db = sinon.createStubInstance(AppStorage);
     notification = sinon.createStubInstance(NotificationAction);
     nav = sinon.createStubInstance(NavAction);
-    wallet = new WalletAction(store, grpc, db, nav, notification);
+    file = sinon.createStubInstance(FileAction);
+    wallet = new WalletAction(store, grpc, db, nav, notification, file);
   });
 
   afterEach(() => {
@@ -56,6 +59,11 @@ describe('Action Wallet Unit Tests', () => {
 
     it('should make seed word lowercase', () => {
       wallet.setSeedVerify({ word: 'FOO', index: 1 });
+      expect(store.wallet.seedVerify[1], 'to equal', 'foo');
+    });
+
+    it('should trim whitespace', () => {
+      wallet.setSeedVerify({ word: ' foo ', index: 1 });
       expect(store.wallet.seedVerify[1], 'to equal', 'foo');
     });
   });
@@ -237,13 +245,15 @@ describe('Action Wallet Unit Tests', () => {
     });
 
     it('init wallet correctly during restore', async () => {
+      const restoreSeed = ['hi', 'hello', 'hola'];
+      store.restoreSeedMnemonic = restoreSeed;
       store.settings.restoring = true;
       wallet.setNewPassword({ password: 'secret123' });
       wallet.setPasswordVerify({ password: 'secret123' });
       await wallet.checkNewPassword();
       expect(wallet.initWallet, 'was called with', {
         walletPassword: 'secret123',
-        seedMnemonic: ['foo', 'bar', 'baz'],
+        seedMnemonic: restoreSeed,
         recoveryWindow: RECOVERY_WINDOW,
       });
     });
@@ -297,6 +307,8 @@ describe('Action Wallet Unit Tests', () => {
     it('should init wallet', async () => {
       grpc.sendUnlockerCommand.withArgs('InitWallet').resolves();
       await wallet.initWallet({ walletPassword: 'baz', seedMnemonic: ['foo'] });
+      expect(file.deleteWalletDB, 'was called with', 'mainnet');
+      expect(file.deleteWalletDB, 'was called with', 'testnet');
       expect(store.walletUnlocked, 'to be', true);
       expect(grpc.sendUnlockerCommand, 'was called with', 'InitWallet', {
         walletPassword: Buffer.from('baz', 'utf8'),
@@ -305,12 +317,37 @@ describe('Action Wallet Unit Tests', () => {
       expect(nav.goSeedSuccess, 'was called once');
     });
 
+    it('should not delete wallet if RNFS not supported', async () => {
+      grpc.sendUnlockerCommand.withArgs('InitWallet').resolves();
+      delete wallet._file;
+      await wallet.initWallet({ walletPassword: 'baz', seedMnemonic: ['foo'] });
+      expect(file.deleteWalletDB, 'was not called');
+      expect(store.walletUnlocked, 'to be', true);
+      expect(grpc.sendUnlockerCommand, 'was called with', 'InitWallet', {
+        walletPassword: Buffer.from('baz', 'utf8'),
+        cipherSeedMnemonic: ['foo'],
+      });
+      expect(nav.goSeedSuccess, 'was called once');
+    });
+
+    it('should display error notification on restore failure', async () => {
+      store.settings.restoring = true;
+      grpc.sendUnlockerCommand
+        .withArgs('InitWallet')
+        .rejects(new Error('Boom!'));
+      await wallet.initWallet({ walletPassword: 'baz', seedMnemonic: ['foo'] });
+      expect(notification.display, 'was called once');
+      expect(nav.goRestoreSeed, 'was called once');
+      expect(nav.goSeedSuccess, 'was not called');
+    });
+
     it('should display error notification on failure', async () => {
       grpc.sendUnlockerCommand
         .withArgs('InitWallet')
         .rejects(new Error('Boom!'));
       await wallet.initWallet({ walletPassword: 'baz', seedMnemonic: ['foo'] });
       expect(notification.display, 'was called once');
+      expect(nav.goRestoreSeed, 'was not called');
       expect(nav.goSeedSuccess, 'was not called');
     });
   });
@@ -367,7 +404,7 @@ describe('Action Wallet Unit Tests', () => {
     it('should clear attributes and navigate to view', () => {
       store.wallet.restoreIndex = 42;
       wallet.initRestoreWallet();
-      expect(store.seedMnemonic.length, 'to equal', 24);
+      expect(store.restoreSeedMnemonic.length, 'to equal', 24);
       expect(store.wallet.restoreIndex, 'to equal', 0);
       expect(nav.goRestoreSeed, 'was called once');
     });
@@ -375,17 +412,17 @@ describe('Action Wallet Unit Tests', () => {
 
   describe('setRestoreSeed()', () => {
     beforeEach(() => {
-      store.seedMnemonic = Array(24).fill('');
+      store.restoreSeedMnemonic = Array(24).fill('');
     });
 
     it('should clear attributes', () => {
       wallet.setRestoreSeed({ word: 'foo', index: 1 });
-      expect(store.seedMnemonic[1], 'to equal', 'foo');
+      expect(store.restoreSeedMnemonic[1], 'to equal', 'foo');
     });
 
     it('should trim whitespace', () => {
       wallet.setRestoreSeed({ word: ' foo ', index: 1 });
-      expect(store.seedMnemonic[1], 'to equal', 'foo');
+      expect(store.restoreSeedMnemonic[1], 'to equal', 'foo');
     });
   });
 

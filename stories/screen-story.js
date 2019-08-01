@@ -17,6 +17,7 @@ import PaymentAction from '../src/action/payment';
 import ChannelAction from '../src/action/channel';
 import TransactionAction from '../src/action/transaction';
 import AuthAction from '../src/action/auth-mobile';
+import FileAction from '../src/action/file-mobile';
 import AtplAction from '../src/action/autopilot';
 import Welcome from '../src/view/welcome';
 import Transaction from '../src/view/transaction';
@@ -77,6 +78,10 @@ import ResetPasswordCurrent from '../src/view/reset-password-current';
 import ResetPasswordNew from '../src/view/reset-password-new';
 import ResetPasswordConfirm from '../src/view/reset-password-confirm';
 import ResetPasswordSaved from '../src/view/reset-password-saved';
+import ResetPinCurrent from '../src/view/reset-pin-current-mobile';
+import ResetPinNew from '../src/view/reset-pin-new-mobile';
+import ResetPinConfirm from '../src/view/reset-pin-confirm-mobile';
+import ResetPinSaved from '../src/view/reset-pin-saved-mobile';
 import NewAddress from '../src/view/new-address';
 import NewAddressMobile from '../src/view/new-address-mobile';
 import Wait from '../src/view/wait';
@@ -86,6 +91,7 @@ import RestoreSeedMobile from '../src/view/restore-seed-mobile';
 
 const store = new Store();
 store.init();
+const file = sinon.createStubInstance(FileAction);
 const nav = sinon.createStubInstance(NavAction);
 const db = sinon.createStubInstance(AppStorage);
 const ipc = sinon.createStubInstance(IpcAction);
@@ -168,6 +174,16 @@ storiesOf('Screens', module)
     <ResetPasswordConfirm store={store} wallet={wallet} nav={nav} />
   ))
   .add('Reset Password - Saved', () => <ResetPasswordSaved nav={nav} />)
+  .add('Reset PIN - Current (Mobile)', () => (
+    <ResetPinCurrent store={store} auth={auth} nav={nav} />
+  ))
+  .add('Reset PIN - New (Mobile)', () => (
+    <ResetPinNew store={store} auth={auth} />
+  ))
+  .add('Reset PIN - Confirm New (Mobile)', () => (
+    <ResetPinConfirm store={store} auth={auth} />
+  ))
+  .add('Reset PIN - Saved (Mobile)', () => <ResetPinSaved nav={nav} />)
   .add('New Address', () => (
     <NewAddress store={store} invoice={invoice} info={info} />
   ))
@@ -204,7 +220,7 @@ storiesOf('Screens', module)
   .add('Notifications (Mobile)', () => (
     <NotificationMobile store={store} nav={nav} />
   ))
-  .add('CLI', () => <CLI store={store} nav={nav} />)
+  .add('CLI', () => <CLI store={store} nav={nav} file={file} />)
   .add('Transactions', () => (
     <Transaction store={store} transaction={transaction} nav={nav} />
   ))

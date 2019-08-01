@@ -43,6 +43,9 @@ export class Store {
         pin: '',
         newPin: '',
         pinVerify: '',
+        resetPinCurrent: '',
+        resetPinNew: '',
+        resetPinVerify: '',
       },
       wallet: {
         password: '',
@@ -82,6 +85,7 @@ export class Store {
       },
       paymentRequest: null,
       seedMnemonic: [],
+      restoreSeedMnemonic: [],
       notifications: [],
       unseenNtfnCount: 0,
       logs: '',
