@@ -30,7 +30,7 @@ We will use `lnd` to make GRPC calls from the ReactJS environment
 ```
 git clone https://github.com/lightningnetwork/lnd $GOPATH/src/github.com/lightningnetwork/lnd
 cd $GOPATH/src/github.com/lightningnetwork/lnd
-make && make install tags="experimental autopilotrpc"
+make && make install tags="experimental autopilotrpc signrpc walletrpc chainrpc invoicesrpc routerrpc"
 ```
 If you have any issues with this step, make sure to review the [Preliniaries to installing LND](https://github.com/lightningnetwork/lnd/blob/master/docs/INSTALL.md#preliminaries)
 
@@ -83,7 +83,7 @@ To run the packaged version of the app e.g. for macOS run:
 
 The app is configured for mainnet by default but you can opt-in to testnet:
 ```
-./dist/mac/Lightning.app/Contents/MacOS/Lightning --bitcoin.testnet --bitcoin.node=neutrino --neutrino.connect=btcd-testnet.lightning.computer --neutrino.feeurl=https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json
+./dist/mac/Lightning.app/Contents/MacOS/Lightning --bitcoin.testnet --bitcoin.node=neutrino --neutrino.addpeer=btcd-testnet.lightning.computer --neutrino.feeurl=https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json
 ```
 
 ### Starting the Packaged App (full node)
